@@ -1,0 +1,37 @@
+body{font-size: 12pt; 
+    line-height: 17pt;
+    SCROLLBAR-HIGHLIGHT-COLOR: buttonface;
+    SCROLLBAR-SHADOW-COLOR: buttonface;
+    SCROLLBAR-3DLIGHT-COLOR: buttonhighlight;
+    SCROLLBAR-TRACK-COLOR: #eeeeee;
+    SCROLLBAR-DARKSHADOW-COLOR: buttonshadow
+}
+.body{
+    background:#E7F4FE;
+}
+td{font-FAMILY:宋体;font-size: 9pt; line-height: 160%}
+.article_title{font-FAMILY:宋体;font-size: 19pt;  letter-spacing: 2px; line-height: 130%; margin: 6; font-weight: bold;}
+.newfont2{font-FAMILY:宋体;font-size: 9pt; line-height: 12pt}
+.newfont3{font-FAMILY:宋体;font-size: 9pt; line-height: 12pt}
+.thetd{font-FAMILY:宋体;font-size: 18pt; color:#000000;line-height: 160%;font-weight:Bold;font-style: None}
+INPUT
+{
+    BORDER-BOTTOM-COLOR: #cccccc;
+    BORDER-BOTTOM-WIDTH: 1px;
+    BORDER-LEFT-COLOR: #cccccc;
+    BORDER-LEFT-WIDTH: 1px;
+    BORDER-RIGHT-COLOR: #cccccc;
+    BORDER-RIGHT-WIDTH: 1px;
+    BORDER-TOP-COLOR: #cccccc;
+    BORDER-TOP-WIDTH: 1px;
+    FONT-FAMILY: 宋体;
+    FONT-SIZE: 9pt;
+    HEIGHT: 18px;
+    PADDING-BOTTOM: 1px;
+    PADDING-LEFT: 1px;
+    PADDING-RIGHT: 1px;
+    PADDING-TOP: 1px
+}
+a:hover {color: #FF0000}
+a:link {text-decoration: none}
+a:visited {text-decoration: none}
