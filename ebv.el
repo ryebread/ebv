@@ -23,12 +23,13 @@
 ;;; Commentary:
 
 ;; A book search and view client.
-;; 
+;;
 
 ;;; Your should add the following to your Emacs configuration file:
 
 ;;; Code:
 (eval-when-compile (require 'cl))
+(load-file "ebv-site-info")
 (require 'url)
 (require 'url-http)
 (require 'xml)
@@ -99,14 +100,6 @@
   :type 'boolean
   :group 'ebv)
 
-(defvar ebv-revert-filter-list
-  '(("十**岁" . "十八九岁")
-    ("zf" . "政府")
-    ("fzf" . "反政府")
-    )
-  "The map of revert filter list.
-
-
 (defconst twitter-web-status-format
   (concat (propertize "%u"
                       'face 'twitter-user-name-face)
@@ -119,6 +112,38 @@ This can be set as the value for twitter-status-format to make it
 display the tweets in a style similar to the twitter website. The
 screen name of the tweeter preceeds the message and the time and
 source is given on the next line.")
+
+
+;;
+;;
+;; ebv base function
+;;
+;;
+(defun ebv-url-http-post (url args)
+  "Send ARGS to URL as a POST request."
+  (let ((url-request-method "POST")
+        (url-request-extra-headers
+         '(("Content-Type" . "application/x-www-form-urlencoded")))
+        (url-request-data
+         (mapconcat (lambda (arg)
+                      (concat (url-hexify-string (car arg))
+                              "="
+                              (w3m-url-encode-string (cdr arg) 'gb2312)))
+                              ;; (url-hexify-string (cdr arg))))
+                    args
+                    "&")))
+    ;; if you want, replace `my-switch-to-url-buffer' with `my-kill-url-buffer'
+    (url-retrieve url (lambda(status)
+                        (switch-to-buffer (current-buffer))))))
+    ;; (url-retrieve url 'my-encode)))
+
+(defun ebv-post-function (url post)
+  (let ((url-request-method "POST")
+	(url-request-data (concat "source=twit.el&status=" (url-hexify-string post)))
+        ;; these headers don't actually do anything (yet?) -- the
+        ;; source parameter above is what counts
+        (url-retrieve url))))
+
 
 (defun ebv-retrieve-url (url cb &optional cbargs)
   "Wrapper around url-retrieve.
@@ -321,9 +346,15 @@ frame configuration."
   ;; Update the mode line immediatly
   (twitter-status-edit-update-length))
 
+;;
+;;
+;; 书籍相关的函数
+;;
+;;
+
 ;; search book
 (defun ebv-search-book (book-name)
-  "搜索电子书."
+  "搜索想要添加的电子书."
   (interactive "s请输入要找的书名:")
   (let ((old-buffer (current-buffer))
         (standard-output standard-output)
@@ -333,7 +364,7 @@ frame configuration."
                         (Buffer-menu-make-sort-button "小说名称" 3) " "
                         (Buffer-menu-make-sort-button "目录页网址" 4) " "; mode-end
                         (Buffer-menu-make-sort-button "最新章节" 5) "\n"))
-        
+
         (buf (get-buffer-create "*EBV*")))
 
     ;; 设置列表头
@@ -487,16 +518,7 @@ frame configuration."
 
   )
 
-(setq site '("86中文网"
-             "http://www.86zww.cn/"
-             "http://www.86zww.cn/modules/article/search.php?searchkey="
-             "<caption>搜索结果</caption>"
-             "</table>"
-             ("<a href=\"http://[a-z0-9A-Z\./?=\%\"]*>" "<") ;标题
-             ("href=\"" "\"")		;目录页网址
-             ("_blank\">" "</a>")	;最新章节
-             "gb2312-dos"
-             ))
+
 ;; search on site
 (defun ebv-search-site(site bookname)
   (let* ((search-engin (nth 2 site))
@@ -519,7 +541,7 @@ frame configuration."
         (goto-char (point-min))
         (search-forward-regexp list-start-flag)
         (setq pos (match-beginning 0))
-        (search-forward-regexp list-end-flag)	     
+        (search-forward-regexp list-end-flag)
         (setq pos-end (match-beginning 0))
 
 
@@ -530,7 +552,7 @@ frame configuration."
           (search-forward-regexp (cdr title-flag))
           (setq bookinfo (append bookinfo
                                  (buffer-substring pos (match-beginning 0))))
-          
+
           (search-forward-regexp (car index-flag)) ;目录页网址
           (setq pos (+ (match-end 0) 1))
           (search-forward-regexp (cdr index-flag))
@@ -560,7 +582,7 @@ frame configuration."
 (require 'webjump)
 (webjump-url-encode
  (w3m-url-encode-string "风流"  'gb2312)
- (url-http 
+ (url-http
   (url-generic-parse-url (nth 1 site))
   (ebv-search-book "tt")
   (switch-to-buffer "*EBV*")
@@ -571,7 +593,7 @@ frame configuration."
     (interactive)
     (let (var1)
       (setq var1 some)
-      
+
       )
     )
 
