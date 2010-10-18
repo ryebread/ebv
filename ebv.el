@@ -31,6 +31,8 @@
 (eval-when-compile (require 'cl))
 (load-file "ebv-site-info")
 (require 'url)
+(require 'w3m)
+
 (require 'url-http)
 (require 'xml)
 
@@ -119,6 +121,17 @@ source is given on the next line.")
 ;; ebv base function
 ;;
 ;;
+(defun ebv-retrieve-page(url &optional no-cache charset
+                             post-data referer handler)
+  "wrap w3m func."
+  (w3m-retrieve-and-render(url no-cache charset
+                               post-data referer handler))
+  )
+
+(defun ebv-extract-data(data-sign)
+  "提取标志内容"
+  )
+
 (defun ebv-url-http-post (url args)
   "Send ARGS to URL as a POST request."
   (let ((url-request-method "POST")
@@ -129,13 +142,13 @@ source is given on the next line.")
                       (concat (url-hexify-string (car arg))
                               "="
                               (w3m-url-encode-string (cdr arg) 'gb2312)))
-                              ;; (url-hexify-string (cdr arg))))
+                    ;; (url-hexify-string (cdr arg))))
                     args
                     "&")))
     ;; if you want, replace `my-switch-to-url-buffer' with `my-kill-url-buffer'
     (url-retrieve url (lambda(status)
                         (switch-to-buffer (current-buffer))))))
-    ;; (url-retrieve url 'my-encode)))
+;; (url-retrieve url 'my-encode)))
 
 (defun ebv-post-function (url post)
   (let ((url-request-method "POST")
@@ -520,113 +533,58 @@ frame configuration."
 
 
 ;; search on site
-(defun ebv-search-site(site bookname)
-  (let* ((search-engin (nth 2 site))
-         (list-start-flag (nth 3 site))
-         (list-end-flag (nth 4 site))
-         (title-flag (nth 5 site))
-         (index-flag (nth 6 site))
-         (newer-flag (nth 7 site))
-         (site-code (nth 8 site))
-         tmp-buf pos pos-end bookinfo result-list)
-
-    (setq tmp-buf (url-retrieve-synchronously (concat search-engin
-                                                      (w3m-url-encode-string bookname 'gb2312))))
-    (when tmp-buf
-      (set-buffer tmp-buf)
-      (switch-to-buffer tmp-buf)
-      (mm-enable-multibyte)	;很重要，转换需要开启
-      (decode-coding-region (point-min) (point-max) 'gb2312-dos)
-      (with-current-buffer tmp-buf
-        (goto-char (point-min))
-        (search-forward-regexp list-start-flag)
-        (setq pos (match-beginning 0))
-        (search-forward-regexp list-end-flag)
-        (setq pos-end (match-beginning 0))
-
-
-        (while (< pos pos-end)
-          (setq bookinfo ())
-          (search-forward-regexp (car title-flag)) ;标题
-          (setq pos (+ (match-end 0) 1))
-          (search-forward-regexp (cdr title-flag))
-          (setq bookinfo (append bookinfo
-                                 (buffer-substring pos (match-beginning 0))))
-
-          (search-forward-regexp (car index-flag)) ;目录页网址
-          (setq pos (+ (match-end 0) 1))
-          (search-forward-regexp (cdr index-flag))
-          (setq bookinfo (append bookinfo
-                                 (buffer-substring pos (match-beginning 0))))
-
-          (search-forward-regexp (car newer-flag)) ;最新章节
-          (setq pos (+ (match-end 0) 1))
-          (search-forward-regexp (cdr newer-flag))
-          (setq bookinfo (append bookinfo
-                                 (buffer-substring pos (match-beginning 0))))
-          (setq pos (+ (match-end 0) 1))
-          (reverse bookinfo)
-          (setq result-list (append result-list bookinfo))
-          )
-        )
-      (kill-buffer tmp-buf)
-      (reverse result-list)
+(defun ebv-search-site(site)
+  (let* ((url-search (cdr (assq 'url-search site)))
+         (keys (cdr (assq 'keys site)))
+         )
+    (with-temp-buffer
+      (ebv-retrieve-page(url-search nil nil keys nil nil))
+      (ebv-extract-data())
       )
     )
   )
-;; test part
-(setq a="gb2312")
-(quote (a))
-(ebv-search-site site "风流")
-(ebv-search-site site "%B7%E7%C1%F7")
-(require 'webjump)
-(webjump-url-encode
- (w3m-url-encode-string "风流"  'gb2312)
- (url-http
-  (url-generic-parse-url (nth 1 site))
-  (ebv-search-book "tt")
-  (switch-to-buffer "*EBV*")
 
-  ;; add book
-  (defun ebv-add-book ()
-    "thisandthat."
-    (interactive)
-    (let (var1)
-      (setq var1 some)
 
-      )
+;; add book
+(defun ebv-add-book ()
+  "thisandthat."
+  (interactive)
+  (let (var1)
+    (setq var1 some)
+
+    )
+  )
+
+(setq content-start-flag "<div id=\"content\">")
+(setq content-end-flag "<span id='adbanner_8'>")
+(defun ebv-format-buffer ()
+  "格式化整理."
+  (interactive)
+  ;; 去除多余头部
+  (if content-start-flag
+      (save-excursion
+        (goto-char (point-min))
+        (re-search-forward content-start-flag nil 'move)
+        (goto-char (match-beginning 0))
+        (delete-region (point-min) (point)))
+    )
+  ;; 去除多余尾部
+  (if content-end-flag
+      (save-excursion
+        (goto-char (point-min))
+        (re-search-forward content-end-flag nil 'move)
+        (delete-region (match-beginning 0) (point-max)))
     )
 
-  (setq content-start-flag "<div id=\"content\">")
-  (setq content-end-flag "<span id='adbanner_8'>")
-  (defun ebv-format-buffer ()
-    "格式化整理."
-    (interactive)
-    ;; 去除多余头部
-    (if content-start-flag
-        (save-excursion
-          (goto-char (point-min))
-          (re-search-forward content-start-flag nil 'move)
-          (goto-char (match-beginning 0))
-          (delete-region (point-min) (point)))
-      )
-    ;; 去除多余尾部
-    (if content-end-flag
-        (save-excursion
-          (goto-char (point-min))
-          (re-search-forward content-end-flag nil 'move)
-          (delete-region (match-beginning 0) (point-max)))
-      )
+  (html2text)
 
-    (html2text)
+  ;; 自动去除多余空行
+  (if ebv-auto-remove-blank		;FIXME:not work
+      (save-excursion
+        (goto-char (point-min))
+        (query-replace-regexp "^[ \t]*$" "")))
+  )
 
-    ;; 自动去除多余空行
-    (if ebv-auto-remove-blank		;FIXME:not work
-        (save-excursion
-          (goto-char (point-min))
-          (query-replace-regexp "^[ \t]*$" "")))
-    )
-
-  (provide 'ebv)
+(provide 'ebv)
 
 ;;; ebv.el ends here

@@ -2,7 +2,6 @@
   '(((name . "16k小说网")                 ;16k小说网
      (url . "http://www.16kbook.com/")
      (url-search . ((url . "http://www.16kbook.com/Book/Search.aspx")
-                    (method . "post")
                     (key . "SearchKey.value")))
      (ListStart . "id=\"BookText\"&gt;")
      (ListEnd . "注：C")
@@ -23,8 +22,7 @@
     ((name . "极品文学网")                 ;极品文学网
      (url . "http://http://www.jpwx.net/")
      (url-search . ((url . "http://www.jpwx.net/modules/article/search.php")
-                    (method . "post")
-                    (key . "searchkey")))
+                    (keys .(("searchkey" . book-name))))
      (ListStart . "id=\"BookText\"&gt;")
      (ListEnd . "注：C")
      (ContentStart . "&lt;div id=\"BText\"&gt;")
